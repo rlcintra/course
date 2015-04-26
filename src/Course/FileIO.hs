@@ -62,8 +62,7 @@ the contents of c
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
-main =
-  error "todo"
+main = getArgs >>= \(c :. _) -> run c
 
 type FilePath =
   Chars
@@ -72,31 +71,32 @@ type FilePath =
 run ::
   Chars
   -> IO ()
-run =
-  error "todo"
+run file = lines <$> readFile file >>= getFiles >>= printFiles
 
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo"
+getFiles = sequence . map getFile
 
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo"
+getFile file = do
+    contents <- readFile file
+    return (file, contents)
 
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles =
-  error "todo"
+printFiles l = sequence (map (uncurry printFile) l) >> return ()
 
 printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo"
+printFile file contents = do
+    putStrLn $ "============ " ++ file
+    putStrLn contents
+
+
 
