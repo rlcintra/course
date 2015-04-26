@@ -41,8 +41,18 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) =
-      error "todo"
+  -- (<$>) f s = (f a, s') 
+      -- where (a, s') = runState s
+--  (<$>) f (State s) = State {
+--    runState = (f s, s)
+--    }
+    --(<$>) f s = State {
+        --runState s = (f a, s') where
+            --(a, s') = runState s
+    --}
+  (<$>) f (State s) = State (\s' -> let (a, s'') = s s' in (f a, s''))
+
+
 
 -- | Implement the `Apply` instance for `State s`.
 -- >>> runState (pure (+1) <*> pure 0) 0
@@ -56,8 +66,9 @@ instance Apply (State s) where
     State s (a -> b)
     -> State s a
     -> State s b 
-  (<*>) =
-    error "todo"
+  (<*>) (State f) (State sa) = State (\s -> let (a, sa') = sa s
+                                                (f', sf) = f sa'
+                                            in  (f' a, sf))
 
 -- | Implement the `Applicative` instance for `State s`.
 -- >>> runState (pure 2) 0
@@ -66,8 +77,7 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo"
+  pure a = State (\s -> (a, s))
 
 -- | Implement the `Bind` instance for `State s`.
 -- >>> runState ((const $ put 2) =<< put 1) 0
@@ -77,8 +87,10 @@ instance Bind (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo"
+  (=<<) f (State sa) = State (\s -> let (a, sa') = sa s
+                                        (State fb) = f a
+                                    in  fb sa')
+    
 
 instance Monad (State s) where
 
@@ -89,8 +101,7 @@ exec ::
   State s a
   -> s
   -> s
-exec =
-  error "todo"
+exec sa s = s' where (_, s') = runState sa s
 
 -- | Run the `State` seeded with `s` and retrieve the resulting value.
 --
@@ -99,8 +110,7 @@ eval ::
   State s a
   -> s
   -> a
-eval =
-  error "todo"
+eval sa s = a where (a, _) = runState sa s
 
 -- | A `State` where the state also distributes into the produced value.
 --
@@ -108,8 +118,7 @@ eval =
 -- (0,0)
 get ::
   State s s
-get =
-  error "todo"
+get = State(\s -> (s, s))
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -118,8 +127,7 @@ get =
 put ::
   s
   -> State s ()
-put =
-  error "todo"
+put s = State(\_ -> ((), s))
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
